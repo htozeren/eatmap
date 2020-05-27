@@ -1,0 +1,538 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<title>Imagemap as menu</title>
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Monoton">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Designed by Bengi Lynch.com">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<link href="./css/dunstyle.css" media="all" rel="stylesheet" type="text/css">
+</head> 
+<style>
+html {
+  width:100%;
+  height:100%;
+  margin:0;
+}
+
+body {
+  width:100%;
+  height:100%;
+  margin:0px;
+  padding:0px;
+  font-family: "Montserrat", sans-serif;
+  font-size:1rem; 
+} 
+
+/* ------ Lightbox ---------
+                            */
+
+/* Unopened lbox */
+
+.lbox {
+  position: absolute;
+  display: none;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Opened lbox */
+.lbox:target {
+   display:block;
+}
+
+.lbox figure {
+  position:relative;
+  margin:auto;
+  width: 25vw;
+  margin-top:5rem;
+  background-color: white;
+  box-sizing:border-box;
+}
+/* Lightbox content */
+.lbox figcaption {
+  position: relative;
+  width: 25vw;
+  height:40vh;
+  margin:auto;
+  padding: 0.5em;
+  background-color: white;
+  box-sizing:border-box;
+ /* border-bottom-left-radius:0.5em;
+  border-bottom-right-radius:0.5em;*/
+  overflow: auto;
+}
+.lbox figcaption ul,.lbox figcaption h2,
+.lbox figcaption h4 {
+  text-align:center;
+  margin-top:0px;
+  margin-bottom:0px;
+}
+@media (max-width: 1400px) and (min-width: 993px) {
+.lbox figure {	
+  width: 32.5vw;
+}
+.lbox figcaption {
+  width: 32.5vw;
+  height:40vh;
+ }
+}
+@media (max-width: 992px) and (min-width: 768px) {
+.lbox figure {	
+  width: 40vw;
+}
+.lbox figcaption {
+  width: 40vw;
+  height:40vh;
+}
+}
+
+
+.lbox h2 {
+	color:#333;
+	font-size:2rem;
+}
+
+/* Close button */
+.lbox .close {
+  position: relative;
+  display: block;
+}
+.lbox .close::after {
+  content: "X";
+  position: absolute;
+  right: -1rem;
+  top: -1rem;
+  width: 2rem;
+  height: 2rem;
+  display:inline;
+  text-align:center;
+  line-height:2rem;
+  z-index: 1;
+  color: white;
+  background-color: #1abc9c;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+@media (max-width:768px) {
+ .lbox {
+  position: relative;
+  }
+  .lbox figure {
+  width: 90vw;
+  }	
+  .lbox figcaption {
+  width: 90vw;
+  }
+  .lbox .close::after {
+  right: 2rem;
+  top: 1rem;
+  background-color: red;
+  }
+} 
+
+/* Lightbox overlay */
+@media (min-width:768px) {
+.lbox .close::before {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  background-color: rgba(0,0,0,.7);
+  content: "";
+  cursor: default;
+}
+}
+
+/* Banner eatmap  */ 
+div#map {
+   margin:0px;
+   padding:0px;
+   height: 100%; 
+   background-image: url('images/eat/poster.png');
+   background-repeat: no-repeat;
+   background-size: 100% 100%;
+}	
+p#header_caption_top {
+	position:absolute;
+	color:white;
+	font-size:2rem;
+	top:10rem;
+	left:1rem;
+	margin:0px;
+	padding:0px;
+}
+
+</style>
+</head>
+<body>
+<!--p>!!! NO ELEMENT BEFORE THIS IMAGE!!!:</p-->
+<div id="map" onclick="clickMap(event)">
+<img src="images/eat/banner.jpg" width="128" height="72" style="opacity:1;" alt="fground" usemap="#eatmap">
+<p id="header_caption_top">Click on the plate, get restaurant info...</p>
+</div> 
+<div id="demo"></div>
+<script>
+var counter=0;
+var idTarget,nSec = 11;
+var plates = [["breakfast", [28,53,57,72]],["salad",[109,127,37,51]],["tofu",[101,109,37,46]],["salad_bar",[59,84,8,32]],["spagetti",[92,117,12,28]],["hamburger",[112,128,19,40]],["grill",[34,55,18,40]],["seafood",[80,97,31,47]],
+["fish",[83,98,47,61]],["vegan",[3,31,21,50]],["pastry",[34,58,43,50]]];
+var demo = document.getElementById("demo");
+var map = document.getElementById("map");
+function simulateClick(x, y) {
+  jQuery(document.elementFromPoint(x, y)).click();
+}
+function shutLightbox(a) {
+  var w = window.innerWidth;
+   var a = ( w > 768 ) ? 1:0;
+	var anchor = document.querySelectorAll(".lbox .close")[0];
+	var content_height = map.offsetHeight;
+	var current_y = window.innerHeight + window.pageYOffset;
+	if(a === 1) {
+	if(current_y >= content_height +400) {
+	if(counter){return;}
+	anchor.click();
+	counter++;
+     }
+   } else {
+   if(current_y >= content_height + 2*w) {
+	if(counter){return;}
+	anchor.click();
+	counter++;
+     }
+   }
+}
+function clickMap(event) {
+//var idTarget = "breakfast";
+ var x1 = event.offsetX;
+  var y1 = event.offsetY;
+  var x2 = event.clientX;
+  var y2 = event.clientY;
+  var x3 = window.pageXOffset;
+  var y3 = window.pageYOffset;
+  var offTop = map.offsetTop;
+  var offLeft = map.offsetLeft;
+  var w = window.innerWidth;
+  var h = window.innerHeight;
+  var H = map.offsetHeight;
+// make sure that page not scrolled 
+if (window.scrollY) {
+  window.scroll(0, 0);  // reset the scroll position to the top left of the document.
+}
+ 
+  demo.innerHTML = "OFFSET : (" + x1 + "," + y1 +")" + "|" + 
+  "CLIENT : (" + x2 + "," + y2 +")" + "|" + 
+  "PAGE : (" + x3 + "," + y3 +")" + "|"+ 
+  "offsetTOP : " + offTop + "," +
+  "offsetLEFT : " + offLeft +"|" +
+  "Width : " + w + "," +
+  "window.innerHeight : " + h + "," +
+  "window.pageYOffset : " + window.pageYOffset + "," +
+  "container.offsetHeight : " + H;
+  var tanX = 128/w;
+  var tanY = 72/h;
+ /* var x = 0.06783*(x1) + offLeft;*/
+  var x = tanX*(x1) + offLeft;
+  var x0 = x - offLeft;
+  /*var y = 0.06783*(y1) + offTop;*/
+  var y = tanY*(y1) + offTop;
+  var y0 = y - offTop;
+  console.log(x0+ " " + y0);
+  console.log("number 1:" + x0 +" "+ y0);
+var iturn=99, href="table", idTarget="id99";
+for (i=0;i < nSec;i++) {
+  var iX1 = plates[i][1][0];
+  var iX2 = plates[i][1][1];
+  var iY1 = plates[i][1][2];
+  var iY2 = plates[i][1][3];
+ 
+  var k = (iX1<(x0) && (x0)<iX2);
+  var l = (iY1<(y0) && (y0)<iY2 );
+  if (k && l) {
+  iturn = i;
+  idTarget = "id" + "" + i; 
+  break;
+  }
+ }
+  console.log('#id of target AREA = ' + idTarget);
+  if(!(iturn>50)) {
+  var iQueue = parseInt(idTarget.slice(2));
+  var hRef = document.getElementsByTagName("AREA")[iQueue].getAttribute("href");
+   console.log("href = " + hRef);
+   simulateClick(x,y);
+   // document.elementFromPoint(x, y).click();
+}
+ 
+ //### Close temporary screen and pop up lbox ###//
+  window.onscroll = function() {
+  window.onscroll = function() {
+  shutLightbox();
+    }
+	counter=0;
+  }
+//Close Paranthesis//
+}
+</script>
+<div id="wrapper" style="background:#afafaf;">
+<div id="myPage" class="container-fluid bg-3 px-5"> <!--CONTAINER FLUID DIV-->
+ <div class="row">
+  <div class="col-sm-12">
+<map name="eatmap">
+<area shape="rect" coords="28,57,53,72" alt="#breakfast" href="#breakfast">
+<area shape="rect" coords="109,37,127,51" alt="#salad" href="#salad">
+<area shape="rect" coords="101,37,109,46" alt="#tofu" href="#tofu">
+<area shape="rect" coords="59,8,84,32" alt="#salad_bar" href="#salad_bar">
+<area shape="rect" coords="92,12,117,28" alt="#spagetti" href="#spagetti">
+<area shape="rect" coords="112,19,128,40" alt="#hamburger" href="#hamburger">
+<area shape="rect" coords="34,18,55,40" alt="#grill"  href="#grill">
+<area shape="rect" coords="80,31,97,47" alt="#seafood" href="#seafood">
+<area shape="rect" coords="83,47,98,61" alt="#fish" href="#fish">
+<area shape="rect" coords="3,21,31,50" alt="#vegan" href="#vegan">
+<area shape="rect" coords="34,43,58,50" alt="#pastry" href="#pastry">  
+</map>
+
+<div class="lbox" id="breakfast">
+  <figure>
+    <a href="#" class="close">
+	<div style="position:relative;padding:0px;margin:0px;">
+	<img src="images/eat/bon-appetit.png" style="width:100%;height:auto;" alt="dunedin">
+	</div>
+    <figcaption>
+	<h2 style="text-align:center; margin-top:0px; margin-bottom:0px;">Bon Appetit Restaurant & Bar</h2>
+ <ul class='circle_ul' style="text-align: center; margin-top:0px; margin-bottom:0px;"><li  class='inline_li'>TU - TR 11:30AM - 9PM;</li><li class='inline_li'>FR-SA 11:30AM - 10PM;</li>
+	  <li class='inline_li'>SU 11:30AM - 9PM;</li><li class='inline_li'>Happy hour: 2 - 6PM </li></ul>
+	  <h4 style="text-align: center; margin-top:0px; margin-bottom:0px;">148 Marina Plaza, Dunedin FL 34698 Tel : <span style='text-decoration:underline;color:#417fc0;'>  727-733-2151</span>
+	<span class='green-color'> www.bonappetitrestaurant.com</span></h4>
+	<p class="text-justify p_fontsize12">
+<i>Bon Appetit Restaurant & Bar </i>overlooks the St. Joseph Sound. It is known to have fantastic
+ food options. With an outstanding service, this restaurant is a must. A great find! A recent
+ addition to Bon Appetit, the outdoor “In The Loop” bar is a great choice place to grab a
+ cocktail and watch the sunset. The daily happy hour is from 2 to 6pm. The bar features 24 seats
+ surrounding a fully stocked bar topped with 4 flat-screen TVs. There’s a bar menu. The Marina
+ Café and the Bon Appetit restaurant indoors are favored for Sunday brunches, business lunches
+ and sunset dinners. Some of the local favorites are: Sangria, Grouper Sandwich, French Onion
+ soup, Key Lime Pie, Cannolis.</p>
+	</figcaption>
+	</a>
+  </figure>
+</div>
+<div class="lbox" id="salad">
+  <figure>
+    <a href="#" class="close">
+    
+	<div style="position:relative;padding:0px;margin:0px;">
+	<img src="images/eat/bon-appetit.png" style="position:relative;width:100%;height:auto;"  alt="dunedin">
+	</div>
+    <figcaption>
+	<h2>SALAD </h2>
+	<ul class='circle_ul'><li  class='inline_li'>TU - TR 11:30AM - 9PM;</li><li class='inline_li'>FR-SA 11:30AM - 10PM;</li>
+	  <li class='inline_li'>SU 11:30AM - 9PM;</li><li class='inline_li'>HAPPY HOUR: 2 - 6PM </li></ul><hr>
+	  <h4>148 Marina Plaza, Dunedin FL 34698 Tel : <span style='text-decoration:underline;color:#417fc0;'>  727-733-2151</span>
+	<span class='green-color p_fontsize14'> www.bonappetitrestaurant.com</span></h4>
+	<p style='text-justify font-size:12px;'>
+	Cras risus odio, pharetra nec ultricies et,
+      mollis ac augue. Nunc et diam quis sapien dignissim auctor.
+      Quisque quis neque arcu, nec gravida magna.
+    SALAD Cras risus odio, pharetra nec ultricies et,
+      mollis ac augue. Nunc et diam quis sapien dignissim auctor.
+      Quisque quis neque arcu, nec gravida magna.
+    SALAD Cras risus odio, pharetra nec ultricies et,
+      mollis ac augue. Nunc et diam quis sapien dignissim auctor.
+      Quisque quis neque arcu, nec gravida magna.
+	  </p>
+	  </figcaption>
+	</a>
+  </figure>
+</div>
+<div class="lbox" id="tofu">
+  <figure>
+    <a href="#" class="close">
+    
+	<div style="position:relative;padding:0px;margin:0px;">
+	<img src="images/eat/bon-appetit.png" style="position:relative;width:100%;height:auto;"  alt="dunedin">
+	</div>
+    <figcaption>
+	<h2>TOFU </h2>
+ <ul class='circle_ul'><li  class='inline_li'>TU - TR 11:30AM - 9PM;</li><li class='inline_li'>FR-SA 11:30AM - 10PM;</li>
+	  <li class='inline_li'>SU 11:30AM - 9PM;</li><li class='inline_li'>HAPPY HOUR: 2 - 6PM </li></ul><hr>
+	  <h4>148 Marina Plaza, Dunedin FL 34698 Tel : <span style='text-decoration:underline;color:#417fc0;'>  727-733-2151</span>
+	<span class='green-color p_fontsize14'> www.bonappetitrestaurant.com</span></h4>
+	<p class = "text-justify" style='font-size:12px;'>
+<i>Bon Appetit Restaurant & Bar </i>overlooks the St. Joseph Sound. It is known to have fantastic
+ food options. With an outstanding service, this restaurant is a must. A great find! A recent
+ addition to Bon Appetit, the outdoor “In The Loop” bar is a great choice place to grab a
+ cocktail and watch the sunset. The daily happy hour is from 2 to 6pm. The bar features 24 seats
+ surrounding a fully stocked bar topped with 4 flat-screen TVs. There’s a bar menu. The Marina
+ Café and the Bon Appetit restaurant indoors are favored for Sunday brunches, business lunches
+ and sunset dinners. Some of the local favorites are: Sangria, Grouper Sandwich, French Onion
+ soup, Key Lime Pie, Cannolis.</p>
+	  </figcaption>
+	</a>
+  </figure>
+</div>
+<div class="lbox" id="salad_bar">
+  <figure>
+    <a href="#" class="close">
+    
+	<div style="position: relative;padding:0px;margin:0px;">
+	<img src="images/eat/firehouse_subs.png" style="position:relative;width:100%;height:auto" alt="salad_bar">
+	</div> 
+    <figcaption>
+	<h2>Firehouse Subs Dunedin #92 </h2>
+ <ul class='circle_ul'><li  class='inline_li'>SU - TR 10:30AM - 9PM;</li><li class='inline_li'>FR-SA 10:30AM - 111PM;</li>
+	  <li class='inline_li'>SU 11:30AM - 9PM;</li><li class='inline_li'>HAPPY HOUR: 2 - 6PM </li></ul><hr>
+	  <h4>1547 Main St. Dunedin, FL 34698  Tel : <span style='text-decoration:underline;color:#417fc0;'>  727-736-7827</span>
+	<span class='green-color p_fontsize14'> https://https://www.firehousesubs.com/locations/fl/dunedin/</span></h4>
+	<p class = "text-justify" style='font-size:12px;'>
+<i>Firehouse Subs Dunedin #92 </i>Pick up a sub sandwich on your way to Jerry Lake. Firehouse Subs located on Main St, specializes in hot subs with premium meats and cheeses, steamed to perfection, then piled high on a toasted private recipe sub roll. Our menu will surely satisfy your appetite! </p>
+	  </figcaption>
+	</a>
+  </figure>
+</div>
+<div class="lbox" id="spagetti">
+  <figure>
+    <a href="#" class="close">
+    
+	<div style="position: relative;padding:0px;margin:0px;">
+	<img src="images/eat/tonys_pizza.png" style="position:relative;width:100%;height:auto;"  alt="spagetti">
+	</div>
+    <figcaption>
+	<h2>Tony's Pizza </h2>
+ <ul class='circle_ul'><li  class='inline_li'> OPENING HOURS:</li><li  class='inline_li'>MO - TR 11AM-12AM;</li>
+	  <li class='inline_li'>FR - ST 11AM-3AM;</li><li class='inline_li'>SU 11AM-12AM;</li></ul><hr>
+	  <h4>320 Main St. Dunedin, FL 34698  Tel : <span style='text-decoration:underline;color:#417fc0;'>  727-286-62427</span>
+	<span class='green-color p_fontsize14'> www.tonyspizzastpete.com/dunedin</span></h4>
+	<p class = "text-justify" style='font-size:12px;'>
+<i>Tony's Pizza, a fast-dining pizzeria</i> with limited seating capacity, Tony’s Pizza provides fast pizza service to all types of patron stopping after the bar-hours or at lunchtime. Got room for 18” pizza or a slice to go, this is the right spot for you. The pizza crust is thin crust New York style and holds up quite nicely, even on a long walk home at 3 am. The pizza is always perfectly baked and has good proportions of toppings. Tony’s also serves Panini, salad, wings, etc.</p>
+	  
+	  </figcaption>
+	</a>
+  </figure>
+</div>
+<div class="lbox" id="hamburger">
+  <figure>
+    <a href="#" class="close">
+    
+	<div style="position:relative;padding:0px;margin:0px;">
+	<img src="images/eat/reburger.png" style="position:relative;width:100%;height:auto;"  alt="dunedin">
+	</div>
+    <figcaption>
+	<h2>Velvet Burger </h2>
+ <ul class='circle_ul'><li  class='inline_li'> Opening hours:</li><li  class='inline_li'>MON-SUN: 11.30am-late</li></ul><hr>
+	  <h4>150 Lower Stuart Street, Dunedin 9016 Phone : <span style='text-decoration:underline;color:#417fc0;'>  (03) 477 7089 </span>
+	<span class='green-color p_fontsize14'> https://www.velvetburger.co.nz</span></h4>
+	<p class = "text-justify" style='font-size:12px;'>
+<i>Velvet Burger </i><i>Ages ago before cyberspace</i>  was made, Captain James Cook sailed all the way down to Aotearoa. Upon coming ashore this beautiful land they bumped into a few Maori fellas. Together they made a handy little trade swapping muskets and gunpowder for fresh meat and veges. After a day hunting Cook and the Chief sat down around the campfire for a few beers. Pretty soon hunger set in so; (slighty boozed) they threw some of their fresh meat on the barby, mixed it with fresh salad, smashed it between a bun and "Boom" the recipe for Velvet Burger was born.</p>
+	 
+	  </figcaption>
+	</a>
+  </figure>
+</div>
+<div class="lbox" id="grill">
+  <figure>
+    <a href="#" class="close">
+    
+	<div style="position:relative;padding:0px;margin:0px;">
+	<img src="images/eat/kellys.png" style="position:relative;width:100%;height:auto;"  alt="dunedin">
+	</div>
+    <figcaption>
+	<h2>Kelly's</h2>
+ <ul class='circle_ul'><li  class='inline_li'> OPENING HOURS:</li><li class='inline_li'> FR - ST 8AM-10:30PM;</li>
+	  <li class='inline_li'> SU 8AM-9PM</li></ul><hr>
+	  <h4>319 Main Street Dunedin, Florida 34698  Tel : <span style='text-decoration:underline;color:#417fc0;'>  727-736-5284 </span>
+	<span class='green-color p_fontsize14'>  http://kellyschicaboom.com</span></h4>
+	<p class = "text-justify" style='font-size:12px;'>
+<i>Kelly’s</i> opened in 1989, it's been Dunedin's favorite place for breakfast, lunch and dinner. In 2016, the restaurant changed hands. Under the new ownership, the restaurant updated its menu with more hearty Southern options. Though prior to 2016, this place was known for its craft kitchen and unique dinner menu, the food is still excellent. The busiest times are weekends between 10am and 12pm. Check out their new breakfast and brunch menu, the options could take you back to your childhood!"+</p>
+	 
+	  </figcaption>
+	</a>
+  </figure>
+</div>
+<div class="lbox" id="seafood">
+  <figure>
+    <a href="#" class="close">
+    
+	<div style="position:relative;padding:0px;margin:0px;">
+	<img src="images/eat/olde_bay_cafe.png" style="position:relative;width:100%;height:auto;"  alt="dunedin">
+	</div>
+    <figcaption>
+	<h2>Olde Bay Cafe & Dunedin Fish Market </h2>
+	<ul class='circle_ul' ><li  class='inline_li'> OPENING HOURS: MO - SU 10AM - 10PM;</li></ul>
+	<h4> 51 Main Street Dunedin, Florida 34698 Tel :  <span style='text-decoration:underline;color:#417fc0;'>  727-733-2542</span>
+	  <span class='green-color p_fontsize14'> https://oldebaycafe.com</span></h4>
+	<p class = "text-justify" style='font-size:12px;'><i>According to the café’s website,</i> the fish house at the Dunedin Marina was a wooden shack with a loading dock, where local commercial fishermen unloaded millions of pounds of Florida seafood in the 1930s. Olde Bay Café is another great location to catch the Florida sunset overlooking Edgewater Park and Dunedin Marina. Known locally for their seafood, this eatery offers nothing fried. Some of the local favorites are: Blue crab stuffed avocado, smoked fish spread, crab cake sandwich or dinner, peanut butter pie. This is great spot to sit by the water with a good craft beer and fresh seafood!
+	  </p>
+	  </figcaption>
+	</a>
+  </figure>
+</div>
+<div class="lbox" id="fish">
+  <figure>
+    <a href="#" class="close">
+    
+	<div style="position:relative;padding:0px;margin:0px;">
+	<img src="images/eat/sea_sea_riders.png" style="position:relative;width:100%;height:auto;"  alt="dunedin">
+	</div>
+    <figcaption>
+	<h2> Sea Sea Riders</h2>
+	<ul class='circle_ul' ><li  class='inline_li'>  TU - TR 11:30AM-10PM;</li><li class='inline_li'> FR - SA 11:30AM-10PM;</li>
+	  <li class='inline_li'> SU 11:30AM-10PM;</li></ul>
+	<h4> 221 Main St., Dunedin FL 34698  Tel :  <span style='text-decoration:underline;color:#417fc0;'>  727-734-1445</span>
+	  <span class='green-color p_fontsize14'> www.seasearidersdunedin.com</span>
+	</h4>
+	<p class = "text-justify" style='font-size:12px;'><i>Southern Coastal Cuisine</i> is served at a restored 1903 waterfront home with veranda dining. The one thing that stands out here is the relaxed atmosphere and no rush to get you out. Some of the favored items are Clam Chowder, Grouper cheeks with Siracha, Key-Lime Cider, soft shell crab sandwich, clam po boy, Grouper entrée.
+   </p>
+	  </figcaption>
+	</a>
+  </figure>
+</div>
+<div class="lbox" id="vegan">
+  <figure>
+    <a href="#" class="close">
+    
+	<div style="position:relative;padding:0px;margin:0px;">
+	<img src="images/eat/potpourri.png" style="position:relative;width:100%;height:auto;"  alt="dunedin">
+	</div>
+    <figcaption>
+	<h2> Potpourri Vegetarian Cafe</h2>
+	<ul class='circle_ul' ><li  class='inline_li'>  TU - TR 11:30AM-10PM;</li><li class='inline_li'> FR - SA 11:30AM-10PM;</li>
+	  <li class='inline_li'> SU 11:30AM-10PM;</li></ul>
+	<h4> Quick Bites, Cafe  Tel :  <span style='text-decoration:underline;color:#417fc0;'>  727-734-1445</span>
+	  <span class='green-color p_fontsize14'> https://www.happycow.net/reviews</span>
+	</h4>
+	<p class = "text-justify" style='font-size:12px;'><i>Potpourri Vegetarian Cafe</i> is a long-standing favourite in Dunedin. Has a a decent number of vege and vegan items on the menu, and in the cabinet. Updated from previous review on 2018-08-21</p>
+	
+	  </figcaption>
+	</a>
+  </figure>
+</div>
+<div class="lbox" id="pastry">
+  <figure>
+    <a href="#" class="close">
+    
+	<div style="position:relative;padding:0px;margin:0px;">
+	<img src="images/eat/artizan_french_pastry.png" style="position:relative;width:100%;height:auto;"  alt="dunedin">
+	</div>
+    <figcaption>
+	<h2>Artizan French Pastry</h2>
+	<ul class='circle_ul' ><li  class='inline_li'>  MO - FR 08:00AM-5PM </li></li></ul>
+	<h4> 1068 Business Lane   Tel :  <span style='text-decoration:underline;color:#417fc0;'>  727-734-1445</span>
+	  <span class='green-color p_fontsize14'> https://mikkelsenspastryshop.com/</span>
+	</h4>
+	<p class = "text-justify" style='font-size:12px;'>We are the leading pastry shop in Southwest Florida, with our clients comprising the best clubs, hotels and restaurants in the region. Yet our flavorful cakes, cheesecakes, cookies, pastries, and tarts aren’t limited to commercial clients. We are known for creating exceptional treats from an assortment of flavors and designs to help individuals and families celebrate special occasions.
+Artful. Decadent. Exquisite. They’re just a few words that our ecstatic customer use to describe our famous cakes. If you’re looking to “wow” your guests with a one-of-a-kind, custom treat, give us a call. You’ll love how we bring your vision to life. 
+	</p>
+	</figcaption>
+	</a>
+  </figure>
+</div>
+
+<!-- End of Code for Image Mapping -->
+</body>
+</html>
